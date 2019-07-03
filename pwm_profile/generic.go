@@ -13,6 +13,10 @@ type temporal struct {
 	min, max float64
 }
 
+func (t *temporal) ValueRange() float64 {
+	return t.max - t.min
+}
+
 func Temporal(conf json.RawMessage, min, max float64) (temporal, error) {
 	var t temporal
 	tFormat := "15:04"

@@ -2,18 +2,26 @@ package pwm_profile
 
 import (
 	"encoding/json"
-	"math"
+	"math/rand"
 	"time"
 )
 
-type random temporal
+type random struct {
+	temporal
+	previous float64
+}
+
+const coeff = 0.1
 
 func Random(conf json.RawMessage, min, max float64) (*random, error) {
 	t, err := Temporal(conf, min, max)
 	if err != nil {
 		return nil, err
 	}
-	s := random(t)
+	s := random{
+		temporal: t,
+		previous: rand.Float64() * t.ValueRange(),
+	}
 	return &s, nil
 }
 
@@ -32,8 +40,10 @@ func (s *random) Get(t time.Time) float64 {
 	if t.After(end) {
 		return 0
 	}
-	totalSeconds := float64(end.Sub(start) / time.Minute)
-	pastSeconds := float64(t.Sub(start) / time.Minute)
-	v := math.Sin(math.Pi * (pastSeconds / totalSeconds))
-	return s.min + (v * (s.max - s.min))
+	f := rand.Float64() * coeff
+	if f > (coeff / 2) {
+		f = -f
+	}
+	s.previous += f
+	return s.previous
 }
